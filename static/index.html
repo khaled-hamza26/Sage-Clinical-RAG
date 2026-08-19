@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sage — Clinical Knowledge Assistant</title>
+  <style>
+    :root { --ink:#2c2620; --muted:#75685d; --brand:#3f5d4e; --brand-dark:#30493d; --paper:#fff; --ground:#faf5ee; --line:#e8dfd1; --warm:#f4e9d8; --danger:#9c4b2e; }
+    * { box-sizing:border-box; } body { margin:0; min-height:100vh; color:var(--ink); background:var(--ground); font:15px/1.55 Inter,system-ui,sans-serif; }
+    .app { min-height:100vh; display:grid; grid-template-columns:285px minmax(0,1fr); }
+    aside { padding:26px 20px; background:var(--brand-dark); color:#f5f0e8; display:flex; flex-direction:column; gap:18px; }
+    .brand { display:flex; align-items:center; gap:10px; font:500 23px Georgia,serif; } .leaf { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; background:#6e8f79; }
+    aside p { margin:0; color:#c3d0c5; font-size:13px; } .source-box { margin-top:6px; padding:14px; border:1px solid rgba(255,255,255,.18); border-radius:12px; background:rgba(255,255,255,.06); }
+    label { display:block; margin-bottom:8px; font-size:13px; font-weight:700; } input[type=file] { width:100%; font-size:12px; color:#dce7dd; } input[type=file]::file-selector-button { margin:0 8px 0 0; padding:7px 9px; border:0; border-radius:6px; color:white; background:#567667; cursor:pointer; }
+    #uploadStatus { min-height:20px; margin-top:8px; color:#dce7dd; font-size:12px; } .foot { margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,.15); color:#b8c8bc; font-size:12px; }
+    main { display:flex; min-height:100vh; flex-direction:column; } header { display:flex; align-items:center; gap:12px; padding:18px 28px; border-bottom:1px solid var(--line); background:var(--paper); } header h1 { margin:0; font:500 20px Georgia,serif; } .status { margin-left:auto; color:var(--muted); font-size:13px; } .dot { display:inline-block; width:8px; height:8px; margin-right:5px; border-radius:50%; background:#c1703d; } .dot.ready { background:#5c8a6e; }
+    .notice { padding:10px 28px; color:#8b5e1f; background:var(--warm); border-bottom:1px solid #ead9b8; font-size:13px; } #chat { flex:1; overflow:auto; padding:28px 24px; } #messages { max-width:760px; margin:auto; }
+    .empty { max-width:540px; margin:11vh auto; text-align:center; } .empty h2 { margin:0 0 8px; font:500 29px Georgia,serif; } .empty p { color:var(--muted); } .suggestions { display:grid; gap:9px; margin-top:22px; } .suggestion { padding:12px; text-align:left; border:1px solid var(--line); border-radius:10px; color:var(--ink); background:var(--paper); cursor:pointer; } .suggestion:hover { border-color:var(--brand); background:#eef3ef; }
+    .message { display:flex; gap:11px; margin:0 0 23px; } .message.user { flex-direction:row-reverse; } .avatar { flex:0 0 30px; width:30px; height:30px; display:grid; place-items:center; border-radius:50%; color:var(--brand); background:#e4ece6; font-size:12px; font-weight:700; } .user .avatar { color:#6b5a38; background:#ede1cc; } .content { max-width:82%; } .bubble { padding:12px 15px; border:1px solid var(--line); border-radius:14px 14px 14px 4px; background:var(--paper); white-space:pre-wrap; } .user .bubble { border:0; border-radius:14px 14px 4px 14px; background:#ede1cc; }
+    .sources { margin-top:8px; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--paper); } .sources summary { padding:9px 12px; color:var(--muted); background:#f3ece1; font-size:13px; cursor:pointer; } .source { padding:11px 13px; border-top:1px solid var(--line); font-size:13px; } .source strong { display:block; } .source small { color:var(--muted); } .source p { margin:4px 0 0; color:var(--muted); }
+    .error { color:var(--danger); border-color:#efc7b8; background:#fbeae4; } .composer-wrap { padding:14px 24px 19px; border-top:1px solid var(--line); background:var(--paper); } form { display:flex; gap:10px; max-width:760px; margin:auto; padding:8px 9px 8px 15px; border:1px solid var(--line); border-radius:15px; background:var(--ground); } textarea { flex:1; min-height:26px; max-height:140px; resize:none; padding:5px 0; border:0; outline:0; color:var(--ink); background:transparent; font:inherit; } button.send { width:38px; height:38px; border:0; border-radius:10px; color:white; background:var(--brand); cursor:pointer; font-size:18px; } button:disabled { opacity:.55; cursor:wait; } .hint { max-width:760px; margin:7px auto 0; color:var(--muted); text-align:center; font-size:11px; }
+    @media (max-width:720px) { .app { display:block; } aside { min-height:0; padding:16px; } .source-box { margin:0; } .foot { display:none; } header,.notice { padding-left:16px; padding-right:16px; } #chat { padding:20px 14px; } .composer-wrap { padding:12px 14px; } .content { max-width:88%; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><span class="leaf">⌁</span> Sage</div>
+      <p>Clinical knowledge assistant</p>
+      <div class="source-box">
+        <label for="sourceFile">Add a knowledge source</label>
+        <input id="sourceFile" type="file" accept=".pdf,.txt,.md">
+        <div id="uploadStatus" aria-live="polite">No documents indexed yet.</div>
+      </div>
+      <div class="foot">Sage retrieves only from your uploaded sources. It supports — never replaces — clinical judgment.</div>
+    </aside>
+    <main>
+      <header><h1>Clinical questions, grounded in your sources</h1><div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Checking knowledge base…</span></div></header>
+      <div class="notice">⚕ For clinical decision support only. Verify information against current guidance and apply independent clinical judgment.</div>
+      <section id="chat"><div id="messages"><div id="empty" class="empty"><h2>Ask a clinical question</h2><p>First upload a guideline, protocol, or other source. Sage will retrieve relevant passages and show the evidence it used.</p><div class="suggestions"><button class="suggestion">What are the initial investigations described in this guideline?</button><button class="suggestion">Summarize the first-line treatment recommendations.</button><button class="suggestion">What does this document say about contraindications?</button></div></div></div></section>
+      <div class="composer-wrap"><form id="chatForm"><textarea id="input" rows="1" placeholder="Ask about an uploaded clinical source…" aria-label="Question"></textarea><button class="send" id="send" type="submit" aria-label="Send">↑</button></form><div class="hint">Sage can make mistakes. Verify important information in the cited source.</div></div>
+    </main>
+  </div>
+  <script>
+    const API_URL = '/api/chat';
+    const messages = document.getElementById('messages'), empty = document.getElementById('empty'), input = document.getElementById('input'), send = document.getElementById('send');
+    const history = [];
+    const escapeHtml = value => { const node = document.createElement('div'); node.textContent = value || ''; return node.innerHTML; };
+    function scrollBottom() { document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight; }
+    function setStatus(data) { const ready = data.ready; document.getElementById('statusDot').classList.toggle('ready', ready); document.getElementById('statusText').textContent = ready ? `${data.document_count} source${data.document_count === 1 ? '' : 's'} · ${data.chunk_count} chunks` : 'No knowledge base yet'; document.getElementById('uploadStatus').textContent = ready ? `${data.document_count} document${data.document_count === 1 ? '' : 's'} indexed (${data.chunk_count} chunks).` : 'No documents indexed yet.'; }
+    async function loadStatus() { try { const response = await fetch('/api/status'); if (response.ok) setStatus(await response.json()); } catch (_) { document.getElementById('statusText').textContent = 'Backend unavailable'; } }
+    function addMessage(role, text, sources = [], isError = false) { empty.style.display = 'none'; const row = document.createElement('article'); row.className = `message ${role}`; const sourceHtml = sources.length ? `<details class="sources"><summary>${sources.length} source${sources.length === 1 ? '' : 's'} used</summary>${sources.map(source => `<div class="source"><strong>${escapeHtml(source.title)}</strong><small>${escapeHtml(source.meta || '')}</small><p>${escapeHtml(source.snippet)}</p></div>`).join('')}</details>` : ''; row.innerHTML = `<div class="avatar">${role === 'user' ? 'You' : 'S'}</div><div class="content"><div class="bubble ${isError ? 'error' : ''}">${escapeHtml(text)}</div>${sourceHtml}</div>`; messages.appendChild(row); scrollBottom(); }
+    function typing(on) { let row = document.getElementById('typing'); if (on && !row) { row = document.createElement('article'); row.id = 'typing'; row.className = 'message assistant'; row.innerHTML = '<div class="avatar">S</div><div class="content"><div class="bubble">Searching your sources…</div></div>'; messages.appendChild(row); scrollBottom(); } if (!on && row) row.remove(); }
+    async function ask(question) { addMessage('user', question); history.push({role:'user', content:question}); typing(true); send.disabled = true; try { const response = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:question, history:history.slice(0,-1)})}); const data = await response.json(); if (!response.ok) throw new Error(data.detail || `Request failed (${response.status})`); typing(false); addMessage('assistant', data.answer || 'No answer returned.', data.sources || []); history.push({role:'assistant', content:data.answer || ''}); } catch (error) { typing(false); addMessage('assistant', error.message || 'Could not reach the knowledge base.', [], true); } finally { send.disabled = false; input.focus(); } }
+    document.getElementById('chatForm').addEventListener('submit', event => { event.preventDefault(); const question = input.value.trim(); if (!question) return; input.value = ''; input.style.height = 'auto'; ask(question); });
+    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
+    input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('chatForm').requestSubmit(); } });
+    document.querySelectorAll('.suggestion').forEach(button => button.addEventListener('click', () => { input.value = button.textContent; document.getElementById('chatForm').requestSubmit(); }));
+    document.getElementById('sourceFile').addEventListener('change', async event => { const file = event.target.files[0]; if (!file) return; const uploadStatus = document.getElementById('uploadStatus'); uploadStatus.textContent = `Indexing ${file.name}… The first upload may take a moment.`; const body = new FormData(); body.append('file', file); try { const response = await fetch('/api/documents', {method:'POST', body}); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Upload failed.'); uploadStatus.textContent = data.message; await loadStatus(); } catch (error) { uploadStatus.textContent = error.message || 'Upload failed.'; } finally { event.target.value = ''; } });
+    loadStatus();
+  </script>
+</body>
+</html>
